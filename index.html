@@ -1,62 +1,85 @@
 <!DOCTYPE html>
-<html lang="en" data-is-home="false" data-is-mobile="false" data-supports-vr="false" data-supports-touch="false" data-site-base-url="https://aframe.io" data-site-root-path="/" data-site-home-url="https://aframe.io/" data-lib-home-url="https://aframe.io/" data-lib-examples-url="https://aframe.io/aframe/examples" data-title="{title} | A-Frame" data-is-spa="false" data-ga-id="UA-24056643-4" data-aframe-version="0.7.0" data-docs-version="0.7.0">
+<html>
+<body>
 
-<head>
-  <title>Hello Crypto!</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <script src="/js/compat.js"></script>
-  <link rel="icon" sizes="192x192" href="assets/icon-192.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="assets/icon-152.png">
-  <link rel="stylesheet" href="/css/index.css">
-  <link rel="stylesheet" href="/css/mobile.css">
-</head>
+  <h3>web3 Provider</h3>
+  <p id="provider">0x000000000</p>
+  <h3>Account Key</h3>
+  <p id="key">0x000000000</p>
+  <h3>Eth Balance</h3>
+  <p id="ethbal">0</p>
+  <h3>Sim Balance</h3>
+  <p id="simbal">0</p>
 
-<body data-page-layout="" data-page-type="examples">
-  <main id="main" class="main">
+  <script src="js/web3.min.js"></script>
 
-    <aside class="sidebar">
-      <div class="sidebar__wrap">
-        <div class="sidebar__wrap__inner">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="js/truffle-contract.min.js"></script>
 
-          <div class="list examples-list">
-            <h2 class="page-title">Hello Crypto</h2>
-            <h3 class="page-content">The <a href='https://en.wikipedia.org/wiki/%22Hello,_World!%22_program'>"Hello World"</a>
-              of blockchain and cryptogames! Learn how to: (1) create an ERC 20 token, (2) deploy it on the blockchain, and (3) integrate it
-              onto an app. Check out the <a href='https://github.com/polats/hello-crypto'>source code on Github.</a></h3>
+  <script>
 
-          </div>
+  window.onload = function()
+  {
+    if (typeof web3 !== 'undefined') {
+      web3Provider = web3.currentProvider;
+      document.getElementById('provider').textContent=web3Provider.constructor.name;
 
-          <a href="/docs/" class="mobile-get-started get-started">
-            (ノ ˘_˘)ノ 。゜。ﾟ
-          </a>
-          <a href="/docs/" class="mobile-put-back get-started">
-            .｡.｡. .｡.ノ( º _ ºノ)
-          </a>
+    } else {
+      // If no injected web3 instance is detected, fallback to the TestRPC
+      web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
+      document.getElementById('provider').textContent="HttpProvider";
 
-          <h3 class="wallet-info">
-            Your browser needs to support an ERC20 wallet like Metamask.
-            <a href='https://github.com/polats/hello-crypto' >Read more about wallets and cryptogames on this link.</a>
-          </h3>
+    }
 
-          <div class="list examples-list blog-list">
-            <h2 class="page-subtitle">Made with ❤ by <a href="http://www.altitude-games.com">Altitude Games</a></h2>
-            <h3 class="page-content">Learn cryptogame development with us on <a href="https://medium.com/cryptogamegroup">Medium</a>.</h3>
-          </div>
+    web3 = new Web3(web3Provider);
+
+    // Get account ID
+    accountID = web3.eth.accounts[0];
+    document.getElementById('key').textContent=accountID;
+
+    // Get balances in BigNumbers
+    var ethBalance;
+
+    web3.eth.getBalance(accountID, function(error, result){
+        if(!error)
+        {
+            ethBalance = result;
+            document.getElementById('ethbal').textContent=result.toString() + " wei";
+        }
+        else
+            console.error(error);
+    });
+
+    var simpleTokenContract;
+    var simpleTokenInstance;
+    var errorMsg;
+
+    // store the contract
+    $.getJSON('build/contracts/SimpleToken.json', function(data) {
+
+      // Get the necessary contract artifact file and instantiate it with truffle-contract
+      var SimpleTokenArtifact = data;
+      simpleTokenContract = TruffleContract(SimpleTokenArtifact);
+
+      // Set the provider for our contract
+      simpleTokenContract.setProvider(web3Provider);
+
+      // invoke the contract to get the balance
+      simpleTokenContract.deployed().then(function(instance) {
+        simpleTokenContractInstance = instance;
+
+        return simpleTokenContractInstance.balanceOf(accountID);
+      }).then(function(result) {
+        document.getElementById('simbal').textContent=result.toString()
+      }).catch(function(err) {
+        document.getElementById('simbal').textContent=err.toString()
+      });
+    });
 
 
-        </div>
-      </div>
-    </aside>
-    <div class="content content--examples">
-      <div class="content--body">
+  }
+  </script>
 
-        <iframe id="exampleIframe" class="example__iframe" width="100%" height="100%" allowfullscreen="yes" scrolling="no" allowvr="yes" src="make-it-rain.html"></iframe>
-
-        </div>
-      </div>
-    </main>
 
 </body>
 </html>
