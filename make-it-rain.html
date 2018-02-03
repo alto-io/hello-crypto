@@ -1,0 +1,190 @@
+
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no,user-scalable=no,maximum-scale=1">
+    <title>Hello Crypto!</title>
+    <script src="//aframe.io/releases/0.5.0/aframe.min.js"></script>
+    <script src="//cdn.rawgit.com/donmccurdy/aframe-extras/v3.13.1/dist/aframe-extras.min.js"></script>
+    <script src="assets/components/ground.js"></script>
+    <script src="assets/shaders/skyGradient.js"></script>
+    <script>
+/**
+ * Rain of Entities component.
+ *
+ * Creates a spawner on the scene, which periodically generates new entities
+ * and drops them from the sky. Objects falling below altitude=0 will be
+ * recycled after a few seconds.
+ *
+ * Requires: physics
+ */
+AFRAME.registerComponent('rain-of-entities', {
+  schema: {
+    tagName:    { default: 'a-cylinder' },
+    components: { default: ['dynamic-body', 'force-pushable', 'color|#FFD700',
+                            'height|0.03', 'radius|0.125', 'material|src:url(assets/icon-192.png);metalness:0.7'] },
+    maxCount:   { default: 100, min: 0 },
+    interval:   { default: 50, min: 0 },
+    lifetime:   { default: 5000, min: 0 }
+  },
+  init: function () {
+    this.coins = [];
+    this.timeout = setInterval(this.spawn.bind(this), this.data.interval);
+  },
+  spawn: function () {
+    if (this.coins.length >= this.data.maxCount) {
+      clearTimeout(this.timeout);
+      return;
+    }
+
+    var data = this.data,
+        coin = document.createElement(data.tagName);
+
+    this.coins.push(coin);
+    this.el.appendChild(coin);
+
+    coin.setAttribute('position', this.randomPosition());
+    coin.setAttribute('rotation', this.randomRotation());
+
+    data.components.forEach(function (s) {
+      var parts = s.split('|');
+      coin.setAttribute(parts[0], parts[1] || '');
+    });
+
+    // Recycling is important, kids.
+    setInterval(function () {
+      // if (coin.body.position.y > 0) return;
+      coin.body.position.copy(this.randomPosition());
+      coin.body.velocity.set(0,0,0);
+    }.bind(this), this.data.lifetime);
+  },
+  randomPosition: function () {
+    return {x: Math.random() * 10 - 5, y: 10, z: Math.random() * 10 - 8};
+  },
+  randomRotation: function () {
+    return {x: Math.random() * 360, y: Math.random() * 360, z: Math.random() * 360};
+  }
+
+});
+
+/**
+ * Force Pushable component.
+ *
+ * Applies behavior to the current entity such that cursor clicks will apply a
+ * strong impulse, pushing the entity away from the viewer.
+ *
+ * Requires: physics
+ */
+AFRAME.registerComponent('force-pushable', {
+  schema: {
+    force: { default: 5 }
+  },
+  init: function () {
+    this.pStart = new THREE.Vector3();
+    this.sourceEl = this.el.sceneEl.querySelector('[camera]');
+    this.el.addEventListener('click', this.forcePush.bind(this));
+  },
+  forcePush: function () {
+    var force,
+        el = this.el,
+        pStart = this.pStart.copy(this.sourceEl.getAttribute('position'));
+
+    // Compute direction of force, normalize, then scale.
+    force = el.body.position.vsub(pStart);
+    force.normalize();
+    force.scale(this.data.force, force);
+
+    el.body.applyImpulse(force, el.body.position);
+  }
+});
+
+/**
+ * Force Float component.
+ *
+ * Applies behavior to the scene in which a keypress (default: Spacebar) will
+ * temporarily disable gravity and apply a small upward impulse to target
+ * entities.
+ *
+ * Requires: physics
+ */
+AFRAME.registerComponent('force-float', {
+  schema: {
+    force:    { default: 1.0 },
+    keyCode:  { default: 32 },
+    selector: { default: '[force-float-target]' }
+  },
+
+  init: function () {
+    this.isFloating = false;
+    document.addEventListener('keyup', this.onKeyup.bind(this));
+  },
+
+  onKeyup: function (e) {
+    if (e.keyCode !== this.data.keyCode) return;
+
+    var data = this.data,
+        isFloating = this.isFloating,
+        physics = this.el.sceneEl.systems.physics,
+        targets = this.el.sceneEl.querySelectorAll(data.selector);
+
+    if (isFloating) {
+      physics.setOption('gravity', this.gravity);
+    } else {
+      // Disable gravity.
+      this.gravity = physics.options.gravity;
+      physics.setOption('gravity', 0);
+
+      // Lift targets slightly.
+      targets = [].slice.call(targets).forEach(function (el) {
+        var position = new CANNON.Vec3().copy(el.getAttribute('position')),
+            impulse = new CANNON.Vec3(
+              0.25 * data.force * Math.random(),
+              1.00 * data.force * Math.random() + 1.5,
+              0.25 * data.force * Math.random()
+            );
+        el.body.applyImpulse(impulse, position);
+      });
+    }
+
+    this.isFloating = !isFloating;
+  }
+});
+    </script>
+  </head>
+  <body>
+    <a-scene rain-of-entities force-float="selector: [force-pushable]">
+
+
+
+      <!-- Environment -->
+      <a-entity id="sky"
+                geometry="primitive: sphere; radius: 65;"
+                material="shader: skyGradient; colorTop: #353449; colorBottom: #BC483E; side: back"></a-entity>
+       <a-entity ground static-body></a-entity>
+       <a-entity light="type: point; color: #f4f4f4; intensity: 0.6; distance: 0" position="8 10 18" angle="180"></a-entity>
+       <a-entity light="type: point; color: #f4f4f4; intensity: 2; distance: 0" position="0 10 -18"></a-entity>
+       <a-entity light="type: ambient; color: #f4f4f4; intensity: 0.6;" position="-8 10 -18"></a-entity>
+       <a-entity id="floor"
+                 static-body
+                 position="0 -0.1 0"
+                 rotation="-90 0 0"
+                 geometry="primitive: plane; width: 20; height: 20"
+                 material="opacity:0.0; transparent:true">
+       </a-entity>
+
+
+      <!-- Player -->
+      <a-entity camera="userHeight: 1.6"
+                universal-controls="movementEnabled: false">
+        <a-entity cursor
+                  position="0 0 -1"
+                  geometry="primitive: circle; radius: 0.01; segments: 4;"
+                  material="color: #FF4444"></a-entity>
+      </a-entity>
+
+
+
+    </a-scene>
+  </body>
+</html>
