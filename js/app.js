@@ -1,6 +1,19 @@
 
 window.onload = function()
 {
+  // vars
+  this.buttonRaining = true;
+  this.currentRainingEth = 0;
+  this.rainObject = {};
+  this.counterObject = {};
+  this.counterBGObject = {};
+  this.walletInfo = {};
+
+  // uses Ethereum balance if true, otherwise gets SIM balance
+  useEth = true;
+
+  bindUI();
+
   // if mobile, inform user to visit desktop and exit function
   if (settings.isMobile) {
     document.getElementById('metamask-prompt').textContent = 'Visit this page on your desktop browser for Metamask support.';
@@ -8,66 +21,123 @@ window.onload = function()
     return;
   }
 
+  // Get web3 provider
   if (typeof web3 !== 'undefined') {
     web3Provider = web3.currentProvider;
-    document.getElementById('wallet-info').textContent=web3Provider.constructor.name;
-
+    this.walletInfo.provider=web3Provider.constructor.name;
   } else {
     // If no injected web3 instance is detected, fallback to the TestRPC
     web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
-    document.getElementById('wallet-info').textContent="HttpProvider";
+    this.walletInfo.provider="HttpProvider";
   }
-
-  document.getElementById('wallet-info').style.display = 'block';
-
 
   web3 = new Web3(web3Provider);
 
   // Get account ID
-  accountID = web3.eth.accounts[0];
-  document.getElementById('key').textContent=accountID;
-  document.getElementById('key').style.display = 'block';
+  this.walletInfo.accountID = web3.eth.accounts[0];
 
-  // Get balances in BigNumbers
-  var ethBalance;
+  // Get token balances
+  if (useEth)
 
-  web3.eth.getBalance(accountID, function(error, result){
-      if(!error)
-      {
-          ethBalance = result;
-          document.getElementById('ethbal').textContent=result.toString() + " wei";
-          document.getElementById('ethbal').style.display = 'block';
-      }
-      else
-          console.error(error);
-  });
-
-  var simpleTokenContract;
-  var simpleTokenInstance;
-  var errorMsg;
-
-  // store the contract
-  $.getJSON('build/contracts/SimpleToken.json', function(data) {
-
-    // Get the necessary contract artifact file and instantiate it with truffle-contract
-    var SimpleTokenArtifact = data;
-    simpleTokenContract = TruffleContract(SimpleTokenArtifact);
-
-    // Set the provider for our contract
-    simpleTokenContract.setProvider(web3Provider);
-
-    // invoke the contract to get the balance
-    simpleTokenContract.deployed().then(function(instance) {
-      simpleTokenContractInstance = instance;
-
-      return simpleTokenContractInstance.balanceOf(accountID);
-    }).then(function(result) {
-      document.getElementById('simbal').textContent=result.toString()
-      document.getElementById('simbal').style.display = 'block';      
-    }).catch(function(err) {
-      document.getElementById('simbal').textContent=err.toString()
+  {
+    web3.eth.getBalance(this.walletInfo.accountID, function(error, result){
+        if(!error)
+        {
+            walletInfo.ETHBalance = web3.fromWei(result, "ether").toFixed(2) + " ETH";
+            rainObject.data.maxDrops = web3.fromWei(result, "ether");
+            displayWallet();
+        }
+        else
+            console.error(error);
     });
-  });
+  }
 
+  else // use custom SimpleToken SIM
+
+  {
+
+    var simpleTokenContract;
+    var simpleTokenInstance;
+    var errorMsg;
+
+    // store the contract
+    $.getJSON('build/contracts/SimpleToken.json', function(data) {
+
+      // Get the necessary contract artifact file and instantiate it with truffle-contract
+      var SimpleTokenArtifact = data;
+      simpleTokenContract = TruffleContract(SimpleTokenArtifact);
+
+      // Set the provider for our contract
+      simpleTokenContract.setProvider(web3Provider);
+
+      // invoke the contract to get the balance
+      simpleTokenContract.deployed().then(function(instance) {
+        simpleTokenContractInstance = instance;
+
+        return simpleTokenContractInstance.balanceOf(this.walletInfo.accountID);
+      }).then(function(result) {
+        walletInfo.SIMBalance = result.toString();
+        displayWallet();
+
+      }).catch(function(err) {
+        walletInfo.SIMBalanceError=err.toString();
+      });
+    });
+
+  }
+
+  displayWallet();
+
+}
+
+function bindUI()
+{
+  document.getElementById('rainbutton').onclick = function() {
+    makeItRain();
+  }
+
+  var i = document.querySelector('iframe');
+  this.rainObject = i.contentWindow.document.body.querySelector('a-scene[rain]').components.rain;
+  this.counterBGObject = i.contentWindow.document.body.querySelector('#counter-bg');
+  this.counterObject = i.contentWindow.document.body.querySelector('#counter');
+}
+
+// need to access it from inside the iframe, so hacky!
+function makeItRain()
+{
+  var rain = this.rainObject;
+
+  rain.data.isRaining = this.buttonRaining;
+
+  this.counterBGObject.setAttribute("visible", this.buttonRaining);
+
+  if (!rain.data.isRaining)
+  {
+    document.getElementById('rainbutton').textContent = "(ノ ˘_˘)ノ 。゜。ﾟ"
+  }
+
+  else {
+    document.getElementById('rainbutton').textContent = "｡.｡. .｡.ノ( º _ ºノ)"
+    this.rainObject.data.currentDrop = 0;
+  }
+
+  // switch button started
+  this.buttonRaining = !this.buttonRaining;
+
+}
+
+function displayWallet()
+{
+  var walletInfo = this.walletInfo;
+
+  document.getElementById('wallet-info').textContent=walletInfo.provider;
+  document.getElementById('key').textContent=walletInfo.accountID;
+  document.getElementById('ethbal').textContent=walletInfo.ETHBalance;
+  document.getElementById('simbal').textContent=walletInfo.SIMBalance;
+
+  document.getElementById('wallet-info').style.display = 'block';
+  document.getElementById('key').style.display = 'block';
+  document.getElementById('ethbal').style.display = 'block';
+  document.getElementById('simbal').style.display = 'block';
 
 }

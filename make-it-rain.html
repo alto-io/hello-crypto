@@ -19,20 +19,25 @@
  *
  * Requires: physics
  */
-AFRAME.registerComponent('rain-of-entities', {
+AFRAME.registerComponent('rain', {
   schema: {
     tagName:    { default: 'a-cylinder' },
     components: { default: ['dynamic-body', 'force-pushable', 'color|#FFD700',
                             'height|0.03', 'radius|0.125', 'material|src:url(assets/icon-192.png);metalness:0.7'] },
     maxCount:   { default: 100, min: 0 },
     interval:   { default: 50, min: 0 },
-    lifetime:   { default: 5000, min: 0 }
+    lifetime:   { default: 5000, min: 0 },
+    maxDrops:   { default: 1.00},
+    isRaining:  { default: false},
+    currentDrop: {default: 0}
   },
   init: function () {
     this.coins = [];
+    this.counter = document.querySelector('#counter');
     this.timeout = setInterval(this.spawn.bind(this), this.data.interval);
   },
   spawn: function () {
+    if (this.data.isRaining == false || this.data.curentDrop >= this.data.maxDrops) return null;
     if (this.coins.length >= this.data.maxCount) {
       clearTimeout(this.timeout);
       return;
@@ -47,6 +52,8 @@ AFRAME.registerComponent('rain-of-entities', {
     coin.setAttribute('position', this.randomPosition());
     coin.setAttribute('rotation', this.randomRotation());
 
+    this.incrementCounter();
+
     data.components.forEach(function (s) {
       var parts = s.split('|');
       coin.setAttribute(parts[0], parts[1] || '');
@@ -55,16 +62,37 @@ AFRAME.registerComponent('rain-of-entities', {
     // Recycling is important, kids.
     setInterval(function () {
       // if (coin.body.position.y > 0) return;
+
+      if (this.data.isRaining == false || this.data.currentDrop >= this.data.maxDrops)
+      {
+        coin.body.position.copy(this.randomFallingPosition());
+        return null;
+      }
+
       coin.body.position.copy(this.randomPosition());
       coin.body.velocity.set(0,0,0);
+      this.incrementCounter();
     }.bind(this), this.data.lifetime);
+  },
+  randomFallingPosition: function () {
+    return {x: Math.random() * 10 - 5, y: -10, z: Math.random() * 10 - 8};
   },
   randomPosition: function () {
     return {x: Math.random() * 10 - 5, y: 10, z: Math.random() * 10 - 8};
   },
   randomRotation: function () {
     return {x: Math.random() * 360, y: Math.random() * 360, z: Math.random() * 360};
+  },
+
+  incrementCounter: function ()
+  {
+    this.data.currentDrop += 0.01;
+    if (this.data.currentDrop > this.data.maxDrops)
+      this.data.currentDrop = this.data.maxDrops;
+      
+    this.counter.setAttribute("text", {value:this.data.currentDrop.toFixed(2) + ' ETH'})
   }
+
 
 });
 
@@ -153,9 +181,7 @@ AFRAME.registerComponent('force-float', {
     </script>
   </head>
   <body>
-    <a-scene rain-of-entities vr-mode-ui="enabled: true" force-float="selector: [force-pushable]">
-
-
+    <a-scene rain vr-mode-ui="enabled: false" force-float="selector: [force-pushable]">
 
       <!-- Environment -->
       <a-entity id="sky"
@@ -175,12 +201,21 @@ AFRAME.registerComponent('force-float', {
 
 
       <!-- Player -->
-      <a-entity camera="userHeight: 1.6"
+      <a-entity camera="userHeight: 2.1"
                 universal-controls="movementEnabled: false">
         <a-entity cursor
                   position="0 0 -1"
                   geometry="primitive: circle; radius: 0.01; segments: 4;"
                   material="color: #FF4444"></a-entity>
+        <a-entity id="counter-bg"
+                  visible="false"
+                  position="0.35 -0.7 -1"
+                  geometry="primitive: plane; width: 0.4; height: 0.15"
+                  material="color: #ffffff;opacity:0.5; transparent:true">
+                  <a-entity id="counter"
+                  text="color: white; align: center; value: 0.000 ETH; width:1.25">
+                  </a-entity>
+        </a-entity>
       </a-entity>
 
 
