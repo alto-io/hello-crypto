@@ -1,4 +1,4 @@
-##Hello Crypto
+# Hello Crypto
 
 
 The "Hello World" of blockchain and cryptogames! (ノ ˘_˘)ノ 。゜。ﾟ
