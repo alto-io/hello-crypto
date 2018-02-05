@@ -153,7 +153,7 @@ AFRAME.registerComponent('force-float', {
     </script>
   </head>
   <body>
-    <a-scene rain-of-entities force-float="selector: [force-pushable]">
+    <a-scene rain-of-entities vr-mode-ui="enabled: true" force-float="selector: [force-pushable]">
 
 
 
@@ -169,7 +169,7 @@ AFRAME.registerComponent('force-float', {
                  static-body
                  position="0 -0.1 0"
                  rotation="-90 0 0"
-                 geometry="primitive: plane; width: 20; height: 20"
+                 geometry="primitive: box; width: 20; height: 20"
                  material="opacity:0.0; transparent:true">
        </a-entity>
 

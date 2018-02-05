@@ -87,7 +87,7 @@
 		bottom:0;
 	}
 
-  .wallet-info
+	.metamask-prompt
   {
     padding:0.5rem 2rem;
 		position:absolute;
@@ -97,6 +97,28 @@
 		text-align:center;
 		width:100%;
   }
+
+  .wallet-info
+  {
+    display:none;
+  }
+
+	.getting-started-info
+  {
+    padding:0.5rem 2rem;
+		position:absolute;
+		top:100px;
+		left:0;
+		right:0;
+		text-align:center;
+		width:100%;
+  }
+
+	a{
+		border-bottom:1px solid rgba(255,255,255,0.25);
+		color:rgba(255,255,255,0.8);
+		text-decoration:none;
+	}
 
   .page-title
   {

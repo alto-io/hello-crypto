@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <h3>web3 Provider</h3>
+  <p id="provider">0x000000000</p>
+  <h3>Account Key</h3>
+  <p id="key">0x000000000</p>
+  <h3>Eth Balance</h3>
+  <p id="ethbal">0</p>
+  <h3>Sim Balance</h3>
+  <p id="simbal">0</p>
+
+  <script src="js/web3.min.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="js/truffle-contract.min.js"></script>
+
+  <script>
+
+  window.onload = function()
+  {
+    if (typeof web3 !== 'undefined') {
+      web3Provider = web3.currentProvider;
+      document.getElementById('provider').textContent=web3Provider.constructor.name;
+
+    } else {
+      // If no injected web3 instance is detected, fallback to the TestRPC
+      web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
+      document.getElementById('provider').textContent="HttpProvider";
+
+    }
+
+    web3 = new Web3(web3Provider);
+
+    // Get account ID
+    accountID = web3.eth.accounts[0];
+    document.getElementById('key').textContent=accountID;
+
+    // Get balances in BigNumbers
+    var ethBalance;
+
+    web3.eth.getBalance(accountID, function(error, result){
+        if(!error)
+        {
+            ethBalance = result;
+            document.getElementById('ethbal').textContent=result.toString() + " wei";
+        }
+        else
+            console.error(error);
+    });
+
+    var simpleTokenContract;
+    var simpleTokenInstance;
+    var errorMsg;
+
+    // store the contract
+    $.getJSON('build/contracts/SimpleToken.json', function(data) {
+
+      // Get the necessary contract artifact file and instantiate it with truffle-contract
+      var SimpleTokenArtifact = data;
+      simpleTokenContract = TruffleContract(SimpleTokenArtifact);
+
+      // Set the provider for our contract
+      simpleTokenContract.setProvider(web3Provider);
+
+      // invoke the contract to get the balance
+      simpleTokenContract.deployed().then(function(instance) {
+        simpleTokenContractInstance = instance;
+
+        return simpleTokenContractInstance.balanceOf(accountID);
+      }).then(function(result) {
+        document.getElementById('simbal').textContent=result.toString()
+      }).catch(function(err) {
+        document.getElementById('simbal').textContent=err.toString()
+      });
+    });
+
+
+  }
+  </script>
+
+
+</body>
+</html>
