@@ -130,12 +130,18 @@ function displayWallet()
 {
   var walletInfo = this.walletInfo;
 
+/*
   document.getElementById('wallet-info').textContent=walletInfo.provider;
-  document.getElementById('key').textContent=walletInfo.accountID;
-  document.getElementById('ethbal').textContent=walletInfo.ETHBalance;
+  document.getElementById('wallet-info').style.display = 'block';
+*/
+
+  var l = walletInfo.accountID.length;
+
+  document.getElementById('key').textContent= "Wallet ID: " +
+  walletInfo.accountID.slice(0, 8) + "......" + walletInfo.accountID.slice(l-8, l);
+  document.getElementById('ethbal').textContent="Account Balance: " + walletInfo.ETHBalance;
   document.getElementById('simbal').textContent=walletInfo.SIMBalance;
 
-  document.getElementById('wallet-info').style.display = 'block';
   document.getElementById('key').style.display = 'block';
   document.getElementById('ethbal').style.display = 'block';
   document.getElementById('simbal').style.display = 'block';

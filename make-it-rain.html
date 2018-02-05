@@ -37,7 +37,7 @@ AFRAME.registerComponent('rain', {
     this.timeout = setInterval(this.spawn.bind(this), this.data.interval);
   },
   spawn: function () {
-    if (this.data.isRaining == false || this.data.curentDrop >= this.data.maxDrops) return null;
+    if (this.data.isRaining == false || this.data.currentDrop >= this.data.maxDrops) return null;
     if (this.coins.length >= this.data.maxCount) {
       clearTimeout(this.timeout);
       return;
@@ -89,7 +89,7 @@ AFRAME.registerComponent('rain', {
     this.data.currentDrop += 0.01;
     if (this.data.currentDrop > this.data.maxDrops)
       this.data.currentDrop = this.data.maxDrops;
-      
+
     this.counter.setAttribute("text", {value:this.data.currentDrop.toFixed(2) + ' ETH'})
   }
 
