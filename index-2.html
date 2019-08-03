@@ -17,69 +17,71 @@
   <script src="js/truffle-contract.min.js"></script>
 
   <script>
-
-  window.onload = function()
-  {
-    if (typeof web3 !== 'undefined') {
-      web3Provider = web3.currentProvider;
-      document.getElementById('provider').textContent=web3Provider.constructor.name;
-
+  window.addEventListener('load', async () => {
+    let web3Provider
+    if (window.ethereum) {
+        try {
+            // Request account access if needed
+            await ethereum.enable()
+            web3Provider = ethereum
+            document.getElementById('provider').textContent = web3Provider.constructor.name
+        } catch (error) {
+          // User denied account access...
+        }
+    } else if(window.web3) {
+      web3Provider = web3.currentProvider
+      document.getElementById('provider').textContent = web3Provider.constructor.name
     } else {
-      // If no injected web3 instance is detected, fallback to the TestRPC
-      web3Provider = new Web3.providers.HttpProvider('http://localhost:9545');
-      document.getElementById('provider').textContent="HttpProvider";
-
+      // If no injected web3/metamask instance is detected, fallback to the Ganache
+      web3Provider = new Web3.providers.HttpProvider('http://localhost:8545')
+      document.getElementById('provider').textContent = 'HttpProvider'
     }
 
-    web3 = new Web3(web3Provider);
+    web3 = new Web3(web3Provider)
 
     // Get account ID
-    accountID = web3.eth.accounts[0];
-    document.getElementById('key').textContent=accountID;
+    const accounts = await web3.eth.getAccounts()
+    const accountID = accounts[0]
+    document.getElementById('key').textContent = accountID
 
     // Get balances in BigNumbers
-    var ethBalance;
+    let ethBalance
+    web3.eth.getBalance(accountID, (error, result) => {
+      if(!error) {
+          ethBalance = result
+          document.getElementById('ethbal').textContent = result.toString() + ' wei'
+      }
+      else {
+        console.error(error)
+      }
+    })
 
-    web3.eth.getBalance(accountID, function(error, result){
-        if(!error)
-        {
-            ethBalance = result;
-            document.getElementById('ethbal').textContent=result.toString() + " wei";
-        }
-        else
-            console.error(error);
-    });
-
-    var simpleTokenContract;
-    var simpleTokenInstance;
-    var errorMsg;
+    let simpleTokenContract
+    let simpleTokenInstance
+    let errorMsg
 
     // store the contract
-    $.getJSON('build/contracts/SimpleToken.json', function(data) {
+    $.getJSON('build/contracts/SimpleToken.json', (data) => {
 
       // Get the necessary contract artifact file and instantiate it with truffle-contract
-      var SimpleTokenArtifact = data;
-      simpleTokenContract = TruffleContract(SimpleTokenArtifact);
+      var SimpleTokenArtifact = data
+      simpleTokenContract = TruffleContract(SimpleTokenArtifact)
 
       // Set the provider for our contract
-      simpleTokenContract.setProvider(web3Provider);
+      simpleTokenContract.setProvider(web3Provider)
 
       // invoke the contract to get the balance
       simpleTokenContract.deployed().then(function(instance) {
         simpleTokenContractInstance = instance;
 
-        return simpleTokenContractInstance.balanceOf(accountID);
+        return simpleTokenContractInstance.balanceOf(accountID)
       }).then(function(result) {
         document.getElementById('simbal').textContent=result.toString()
       }).catch(function(err) {
         document.getElementById('simbal').textContent=err.toString()
-      });
-    });
-
-
-  }
+      })
+    })
+  })
   </script>
-
-
 </body>
 </html>
