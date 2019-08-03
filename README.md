@@ -15,13 +15,13 @@ lite-server
 
 ```
 ## Creating It From Scratch
-If we want to learn how the pieces come together, it helps to go through the process of creating the Hello Crypto app ourselves. 
+If we want to learn how the pieces come together, it helps to go through the process of creating the Hello Crypto app ourselves.
 
 We can break it down into 3 parts:
 
-* (1) interacting with the Ethereum blockchain in your app, 
-* (2) creating our own ERC20 token, and 
-* (3) deploying it on the blockchain. 
+* (1) interacting with the Ethereum blockchain in your app,
+* (2) creating our own ERC20 token, and
+* (3) deploying it on the blockchain.
 
 ----
 
@@ -29,7 +29,7 @@ We can break it down into 3 parts:
 
 #### 1. Install Metamask
 
-If you haven't yet, install the [Metamask Extension](https://metamask.io/) on your browser. 
+If you haven't yet, install the [Metamask Extension](https://metamask.io/) on your browser.
 
 In order to interact with the blockchain, we will need a wallet address from which to call transactions from. Currently the easiest way to create one is by using Metamask. And since we're making a web app, Metamask also conveniently provides us helper functions that we'll be using later.
 
@@ -64,7 +64,7 @@ The browser should automatically start the web app from index.html and you shoul
 
 ![Alt text](ss/1.png?raw=true "First Run")
 
-The app uses our wallet account in Metamask and the web3.js library to interact with the blockchain-- it queries the account's ETH balance, and uses Javascript to display them on the page. If your wallet has ETH it should show the current amount here. 
+The app uses our wallet account in Metamask and the web3.js library to interact with the blockchain-- it queries the account's ETH balance, and uses Javascript to display them on the page. If your wallet has ETH it should show the current amount here.
 
 **Note:** The SIM Balance error is expected, it appears since we don't have that custom token's smart contract deployed on the blockchain. We will fix that in the next section.
 
@@ -88,26 +88,24 @@ truffle init
 ```
 
 Once done you'll see a bunch of new files and directories created in our project directory. These are Truffle's deployment scripts and config files.
- 
+
 #### 2. Install OpenZeppelin
 
 We will be using the example token smart contract from [OpenZeppelin](https://github.com/OpenZeppelin/zeppelin-solidity). This is a good starting point as they're peer-reviewed smart contracts that follow standards defined by the community. We can use them by simply downloading them also from npm:
 
 ```
-npm install zeppelin-solidity
+npm install @openzeppelin/contracts
 ```
 
-You should see a node_modules/zeppelin-solidity folder once the command completes.
+You should see a node_modules/@openzeppelin folder once the command completes.
 
-#### 3. Copy SimpleToken to contracts and fix import
+#### 3. Open StandardToken.sol
 
-Go into the node_modules/zeppelin-solidity/contracts/examples folder and copy the **SimpleToken.sol** file to the **contracts** directory made by truffle init.
+This is almost a copy of `@openzeppelin/contracts/token/ERC20/ERC20.sol` which implements the IERC20.sol contract interface but instead of having private member variables we will leave them as public.
 
-We need to change the import part in line 4 of the copied SimpleToken.sol as shown in the following screenshot:
+#### 4. Open SimpleToken.sol
 
-```
-import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-```
+This is our own ERC-20 custom token which inherits from StandardToken.
 
 ![Alt text](ss/2.png?raw=true "Change Import")
 
@@ -160,7 +158,7 @@ You should see the error we had previously is now gone, as our web app is now su
 
 ![Alt text](ss/6.png?raw=true "Local Blockchain")
 
-**Note:** Truffle uses the first account in Truffle develop as the contract creator. In the screenshot above, we imported that account in Metamask using its private key. As the OpenZeppelin SimpleToken sets the contract creator as the holder of all the initial supply of our custom token, we see that the Truffle Account's Sim balance contains exactly that. 
+**Note:** Truffle uses the first account in Truffle develop as the contract creator. In the screenshot above, we imported that account in Metamask using its private key. As the OpenZeppelin SimpleToken sets the contract creator as the holder of all the initial supply of our custom token, we see that the Truffle Account's Sim balance contains exactly that.
 
 ## IN PROGRESS
 
