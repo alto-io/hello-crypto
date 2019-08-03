@@ -32,8 +32,8 @@
       web3Provider = web3.currentProvider
       document.getElementById('provider').textContent = web3Provider.constructor.name
     } else {
-      // If no injected web3/metamask instance is detected, fallback to the Ganache
-      web3Provider = new Web3.providers.HttpProvider('http://localhost:8545')
+      // If no injected web3/metamask instance is detected, fallback to Truffle
+      web3Provider = new Web3.providers.HttpProvider('http://localhost:9545')
       document.getElementById('provider').textContent = 'HttpProvider'
     }
 
