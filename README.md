@@ -1,7 +1,6 @@
 # Hello Crypto
 
-
-The "Hello World" of blockchain and cryptogames! (ノ ˘_˘)ノ 。゜。ﾟ
+The "Hello World" of blockchain and cryptogames! (ノ ˘_˘)ノ  。゜。ﾟ
 
 Live demo here: <https://polats.github.io/hello-crypto>
 
@@ -14,16 +13,18 @@ npm install -g lite-server
 lite-server
 
 ```
+
 ## Creating It From Scratch
+
 If we want to learn how the pieces come together, it helps to go through the process of creating the Hello Crypto app ourselves.
 
 We can break it down into 3 parts:
 
-* (1) interacting with the Ethereum blockchain in your app,
-* (2) creating our own ERC20 token, and
-* (3) deploying it on the blockchain.
+-   (1) interacting with the Ethereum blockchain in your app,
+-   (2) creating our own ERC20 token, and
+-   (3) deploying it on the blockchain.
 
-----
+---
 
 ### Interacting with the Ethereum Blockchain in Your App
 
@@ -68,7 +69,7 @@ The app uses our wallet account in Metamask and the web3.js library to interact 
 
 **Note:** The SIM Balance error is expected, it appears since we don't have that custom token's smart contract deployed on the blockchain. We will fix that in the next section.
 
-----
+---
 
 ### Creating Our Own ERC20 Token
 
@@ -81,6 +82,7 @@ Creating a custom ERC20 Token is usually the first use case for those learning h
 ```
 npm install -g truffle
 ```
+
 And then initialize our project by typing:
 
 ```
@@ -99,15 +101,41 @@ npm install @openzeppelin/contracts
 
 You should see a node_modules/@openzeppelin folder once the command completes.
 
-#### 3. Open StandardToken.sol
+#### 3. Create StandardToken.sol
+
+Copy the `StandardToken.sol` file from the contracts folder into contracts folder in our project directory.
 
 This is almost a copy of `@openzeppelin/contracts/token/ERC20/ERC20.sol` which implements the IERC20.sol contract interface but instead of having private member variables we will leave them as public.
 
-#### 4. Open SimpleToken.sol
+#### 4. Create SimpleToken.sol
+
+Create `SimpleToken.sol` in the contracts folder.
 
 This is our own ERC-20 custom token which inherits from StandardToken.
 
-![Alt text](ss/2.png?raw=true "Change Import")
+Copy the following code into `SimpleToken.sol`:
+
+```solidity
+pragma solidity >=0.7.0 <0.9.0;
+
+import './StandardToken.sol';
+
+contract SimpleToken is StandardToken {
+    using SafeMath for uint256;
+
+    string public constant name = "SimpleToken";
+    string public constant symbol = "SIM";
+    uint8 public constant decimals = 18;
+
+    uint256 public constant INITIAL_SUPPLY = 1000 * (10 ** uint256(decimals));
+
+    constructor() public {
+        _totalSupply = INITIAL_SUPPLY;
+        _balances[msg.sender] = INITIAL_SUPPLY;
+        transfer(msg.sender, INITIAL_SUPPLY);
+    }
+}
+```
 
 #### 4. Add Deployment Script
 
@@ -130,6 +158,7 @@ We now setup a local test blockchain by using Truffle, which can be done simply 
 ```
 truffle develop
 ```
+
 ![Alt text](ss/4.png?raw=true "Truffle Develop")
 
 Once successful we should see the same screen, with us entering the truffle develop console.
@@ -162,7 +191,6 @@ You should see the error we had previously is now gone, as our web app is now su
 
 ## IN PROGRESS
 
-
 (optional) interact with contract on truffle console
 
 Send ETH
@@ -176,7 +204,6 @@ recipientAccount = web3.eth.accounts[1]
 web3.eth.getBalance 0 and 1
 
 web3.eth.sendTransaction({from:Account1, to:Account2, value: 10000})
-
 
 Send SIM
 
@@ -194,7 +221,6 @@ contractInstance.transfer(recipientAddress, 5000)
 
 check new balance
 
-
 (optional) Setup web3 javascript console
 
 Perform previous ETH transfer operations
@@ -208,7 +234,6 @@ load simpleToken json
 return balance
 
 Add make-it-rain.html
-
 
 III. Deploy on the Blockchain
 
